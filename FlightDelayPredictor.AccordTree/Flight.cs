@@ -13,6 +13,9 @@ namespace FlightDelayPredictor.AccordTree
     {
         static readonly int NUM_FIELDS = 6;
 
+        public static int[][] FieldsArray;
+        public static int[] OutputArray;
+
         static Dictionary<string, int> AirlineInts = new Dictionary<string, int>();
         static Dictionary<string, int> AirportInts = new Dictionary<string, int>();
 
@@ -26,9 +29,6 @@ namespace FlightDelayPredictor.AccordTree
 
         public static List<Flight> ParseFlights()
         {
-            AirlineInts.Add("COUNT", 0);
-            AirportInts.Add("COUNT", 0);
-
             List<Flight> flights = new List<Flight>();
             var csv = new CsvReader(File.OpenText("../../../flights.csv"));
             csv.Read();
@@ -51,22 +51,19 @@ namespace FlightDelayPredictor.AccordTree
                 flight.Airline = csv.GetField<string>("AIRLINE");
                 if (!AirlineInts.ContainsKey(flight.Airline))
                 {
-                    AirlineInts.Add(flight.Airline, AirlineInts["COUNT"]);
-                    AirlineInts["COUNT"]++;
+                    AirlineInts.Add(flight.Airline, AirlineInts.Count);
                 }
 
                 flight.OriginAirport = csv.GetField<string>("ORIGIN_AIRPORT");
                 if (!AirportInts.ContainsKey(flight.OriginAirport))
                 {
-                    AirportInts.Add(flight.OriginAirport, AirportInts["COUNT"]);
-                    AirportInts["COUNT"]++;
+                    AirportInts.Add(flight.OriginAirport, AirportInts.Count);
                 }
 
                 flight.DestinationAirport = csv.GetField<string>("DESTINATION_AIRPORT");
                 if (!AirportInts.ContainsKey(flight.DestinationAirport))
                 {
-                    AirportInts.Add(flight.DestinationAirport, AirportInts["COUNT"]);
-                    AirportInts["COUNT"]++;
+                    AirportInts.Add(flight.DestinationAirport, AirportInts.Count);
                 }
 
                 // departure delay may not exist
@@ -86,24 +83,57 @@ namespace FlightDelayPredictor.AccordTree
         }
 
         // Convert list of flights to int[,] array to be used by the Accord decision tree
-        public static int[,] FlightsToArray(List<Flight> flights)
+        public static void FlightsToArrays(List<Flight> flights, int sampleSize = -1)
         {
-            Debug.WriteLine("Converting Flights list to array...");
+            Debug.WriteLine("Converting Flights list to arrays...");
 
-            int[,] fields = new int[flights.Count, NUM_FIELDS];
-
-            for (int i = 0; i < flights.Count; i++)
+            if (sampleSize == -1)
             {
-                fields[i, 0] = flights[i].Month;
-                fields[i, 1] = flights[i].Day;
-                fields[i, 2] = flights[i].DayOfWeek;
-                fields[i, 3] = AirlineInts[flights[i].Airline];
-                fields[i, 4] = AirportInts[flights[i].OriginAirport];
-                fields[i, 5] = AirportInts[flights[i].DestinationAirport];
+                FieldsArray = new int[flights.Count][];
+                OutputArray = new int[flights.Count];
+
+                for (int i = 0; i < flights.Count; i++)
+                {
+                    FieldsArray[i] = new int[NUM_FIELDS];
+
+                    FieldsArray[i][0] = flights[i].Month;
+                    FieldsArray[i][1] = flights[i].Day;
+                    FieldsArray[i][2] = flights[i].DayOfWeek;
+                    FieldsArray[i][3] = AirlineInts[flights[i].Airline];
+                    FieldsArray[i][4] = AirportInts[flights[i].OriginAirport];
+                    FieldsArray[i][5] = AirportInts[flights[i].DestinationAirport];
+
+                    // 1 if there is a delay
+                    OutputArray[i] = flights[i].DepartureDelay > 0 ? 1 : 0;
+                }
+            } else
+            {
+                Random random = new Random();
+
+                FieldsArray = new int[sampleSize][];
+                OutputArray = new int[sampleSize];
+
+                for (int i = 0; i < sampleSize; i++)
+                {
+                    FieldsArray[i] = new int[NUM_FIELDS];
+
+                    // get random flight from list
+                    Flight flight = flights[random.Next(flights.Count)];
+
+                    FieldsArray[i][0] = flight.Month;
+                    FieldsArray[i][1] = flight.Day;
+                    FieldsArray[i][2] = flight.DayOfWeek;
+                    FieldsArray[i][3] = AirlineInts[flight.Airline];
+                    FieldsArray[i][4] = AirportInts[flight.OriginAirport];
+                    FieldsArray[i][5] = AirportInts[flight.DestinationAirport];
+
+                    // 1 if there is a delay
+                    OutputArray[i] = flight.DepartureDelay > 0 ? 1 : 0;
+
+                }
             }
 
             Debug.WriteLine("done.");
-            return fields;
         }
 
     }
