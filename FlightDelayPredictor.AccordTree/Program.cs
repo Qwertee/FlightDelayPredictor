@@ -17,8 +17,11 @@ namespace FlightDelayPredictor.AccordTree
         {
             Console.WriteLine("parsing...");
             List<Flight> flights = Flight.ParseFlights();
-
             Console.WriteLine("done");
+
+            int[,] fields = Flight.FlightsToArray(flights);
+
+
             Console.ReadKey();
         }
     }
