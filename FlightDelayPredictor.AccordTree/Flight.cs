@@ -30,7 +30,7 @@ namespace FlightDelayPredictor.AccordTree
         public static List<Flight> ParseFlights()
         {
             List<Flight> flights = new List<Flight>();
-            var csv = new CsvReader(File.OpenText("../../../flights.csv"));
+            var csv = new CsvReader(File.OpenText("../../../../flights.csv"));
             csv.Read();
             csv.ReadHeader();
 

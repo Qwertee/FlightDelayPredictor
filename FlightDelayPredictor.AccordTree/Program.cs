@@ -25,7 +25,11 @@ namespace FlightDelayPredictor.AccordTree
             sw.Stop();
             Console.WriteLine("done, time taken: " + sw.Elapsed.Seconds + " seconds");
 
-            Flight.FlightsToArrays(flights, 100000);
+            /*
+             * 1,000,000 samples = ~5 min and 6.5GB RAM (too much for my system)    91% accuracy
+             * 750,000 samples   = ~1:30 total and about 5GB RAM (much more doable) 93% accuracy
+             */
+            Flight.FlightsToArrays(flights, 750000);
 
             ID3Learning teacher = new ID3Learning();
             Console.WriteLine("training...");
